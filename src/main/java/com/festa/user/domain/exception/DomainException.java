@@ -1,4 +1,16 @@
 package com.festa.user.domain.exception;
 
-public class DomainException {
+
+public abstract class DomainException extends RuntimeException {
+
+    private final String code;
+
+    protected DomainException(String code, String message) {
+        super(message);
+        this.code = code;
+    }
+
+    public String getCode() {
+        return code;
+    }
 }

@@ -1,4 +1,4 @@
 package com.festa.user.config;
 
-public class EnvProperties {
+public class OpenApiConfig {
 }
