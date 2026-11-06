@@ -44,8 +44,6 @@ public class SecurityConfig {
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> jwt
-                                // Inyectamos el AppProperties directamente aquí
-                                .decoder(jwtDecoder(null))
                                 .jwtAuthenticationConverter(new FestaJwtAuthenticationConverter())
                         )
                 );
