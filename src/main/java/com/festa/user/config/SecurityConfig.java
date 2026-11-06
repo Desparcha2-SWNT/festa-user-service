@@ -9,6 +9,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
 import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.OAuth2ErrorCodes;
+import org.springframework.security.oauth2.core.OAuth2TokenValidator;
 import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -43,16 +44,24 @@ public class SecurityConfig {
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> jwt
-                                .decoder(jwtDecoder())
+                                // Inyectamos el AppProperties directamente aquí
+                                .decoder(jwtDecoder(null))
                                 .jwtAuthenticationConverter(new FestaJwtAuthenticationConverter())
                         )
                 );
         return http.build();
     }
 
+    // CORRECCIÓN AQUÍ: Se inyecta AppProperties correctamente como Bean
     @Bean
     public JwtDecoder jwtDecoder(AppProperties props) {
-        String jwkSetUri = props.authAdmin().baseUrl() + "/.well-known/jwks.json";
+        // Si por alguna razón props es null (fallback), usamos el valor por defecto
+        String baseUrl = (props != null && props.authAdmin() != null)
+                ? props.authAdmin().baseUrl()
+                : "http://localhost:8081";
+
+        String jwkSetUri = baseUrl + "/.well-known/jwks.json";
+
         NimbusJwtDecoder decoder = NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build();
         decoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(
                 JwtValidators.createDefault(),
@@ -61,7 +70,7 @@ public class SecurityConfig {
         return decoder;
     }
 
-    private org.springframework.security.oauth2.core.OAuth2TokenValidator<Jwt> issuerValidator() {
+    private OAuth2TokenValidator<Jwt> issuerValidator() {
         return jwt -> {
             String iss = jwt.getClaimAsString("iss");
             if (AUTH_ISSUER.equals(iss)) {
