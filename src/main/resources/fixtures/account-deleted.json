@@ -1,0 +1,6 @@
+{
+  "eventId": "33333333-3333-3333-3333-333333333333",
+  "occurredAt": "2026-01-17T10:00:00Z",
+  "eventType": "account.deleted",
+  "accountId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+}

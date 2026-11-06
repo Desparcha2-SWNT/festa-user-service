@@ -1,4 +1,8 @@
 package com.festa.user.domain.port.in;
 
-public class UpdateMerchantUseCase {
+import com.festa.user.application.command.UpdateMerchantCommand;
+import com.festa.user.domain.model.MerchantProfile;
+
+public interface UpdateMerchantUseCase {
+    MerchantProfile handle(UpdateMerchantCommand command);
 }

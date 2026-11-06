@@ -1,0 +1,7 @@
+{
+  "eventId": "44444444-4444-4444-4444-444444444444",
+  "occurredAt": "2026-01-18T10:00:00Z",
+  "eventType": "moderation.user_suspended",
+  "accountId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+  "reason": "Contenido inapropiado"
+}

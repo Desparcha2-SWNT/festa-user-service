@@ -1,0 +1,33 @@
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+
+  rabbitmq:
+    host: ${RABBITMQ_HOST}
+    port: ${RABBITMQ_PORT}
+    username: ${RABBITMQ_USER}
+    password: ${RABBITMQ_PASS}
+
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${AUTH_JWKS_URL}
+
+festa:
+  user:
+    pii-key: ${PII_ENCRYPTION_KEY}
+    auth-admin:
+      base-url: ${AUTH_BASE_URL}
+
+logging:
+  level:
+    root: ${LOG_LEVEL:INFO}
+    com.festa.user: ${LOG_LEVEL:INFO}

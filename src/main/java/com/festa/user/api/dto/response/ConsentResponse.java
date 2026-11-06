@@ -1,4 +1,11 @@
 package com.festa.user.api.dto.response;
 
-public class ConsentResponse {
+import java.time.Instant;
+
+public record ConsentResponse(
+        String type,
+        boolean granted,
+        String version,
+        Instant grantedAt
+) {
 }

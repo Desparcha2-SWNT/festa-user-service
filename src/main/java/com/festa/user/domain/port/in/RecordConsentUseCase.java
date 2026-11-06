@@ -1,4 +1,8 @@
 package com.festa.user.domain.port.in;
 
-public class RecordConsentUseCase {
+import com.festa.user.application.command.RecordConsentCommand;
+import com.festa.user.domain.model.Consent;
+
+public interface RecordConsentUseCase {
+    Consent handle(RecordConsentCommand command);
 }

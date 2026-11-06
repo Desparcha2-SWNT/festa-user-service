@@ -1,4 +1,10 @@
 package com.festa.user.domain.port.out;
 
-public class ClockPort {
+import java.time.Instant;
+
+/**
+ * Inyectable para testear transiciones y createdAt/updatedAt de forma determinista.
+ */
+public interface ClockPort {
+    Instant now();
 }

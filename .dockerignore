@@ -1,0 +1,9 @@
+target/
+.git/
+.github/
+.idea/
+*.iml
+*.log
+docs/
+tests/
+src/test/

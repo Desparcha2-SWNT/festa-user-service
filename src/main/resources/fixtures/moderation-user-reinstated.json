@@ -1,0 +1,6 @@
+{
+  "eventId": "55555555-5555-5555-5555-555555555555",
+  "occurredAt": "2026-01-19T10:00:00Z",
+  "eventType": "moderation.user_reinstated",
+  "accountId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+}

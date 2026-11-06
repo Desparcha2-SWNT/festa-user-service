@@ -1,0 +1,100 @@
+services:
+  user-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: user_db
+      POSTGRES_USER: festa_user
+      POSTGRES_PASSWORD: festa_user_pw
+    ports:
+      - "5434:5432"
+    volumes:
+      - user-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U festa_user -d user_db"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: festa
+      RABBITMQ_DEFAULT_PASS: festa
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  auth-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: auth_db
+      POSTGRES_USER: festa_auth
+      POSTGRES_PASSWORD: festa_auth_pw
+    ports:
+      - "5433:5432"
+    volumes:
+      - auth-db-data:/var/lib/postgresql/data
+
+  auth-service:
+    build:
+      context: ../festa-auth-service # Asegúrate de que esta ruta exista o cámbiala a una imagen real
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      DB_URL: jdbc:postgresql://auth-db:5432/auth_db
+      DB_USER: festa_auth
+      DB_PASSWORD: festa_auth_pw
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USER: festa
+      RABBITMQ_PASS: festa
+      ADMIN_EMAIL: admin@escuelaing.edu.co
+      ADMIN_PASSWORD: AdminPassword123
+      ALLOWED_EMAIL_DOMAIN: escuelaing.edu.co
+    depends_on:
+      auth-db:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    ports:
+      - "8081:8081"
+
+  user-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      DB_URL: jdbc:postgresql://user-db:5432/user_db
+      DB_USER: festa_user
+      DB_PASSWORD: festa_user_pw
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USER: festa
+      RABBITMQ_PASS: festa
+      REDIS_HOST: redis
+      AUTH_JWKS_URL: http://auth-service:8081/.well-known/jwks.json
+      AUTH_BASE_URL: http://auth-service:8081
+      PII_ENCRYPTION_KEY: "0123456789abcdef0123456789abcdef" # Llave fija para pruebas locales
+    depends_on:
+      user-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      auth-service:
+        condition: service_started
+    ports:
+      - "8082:8082"
+
+volumes:
+  user-db-data:
+  auth-db-data:
