@@ -1,5 +1,6 @@
+# Variables con los mismos nombres que festa-infra/docker-compose.yml (patrón de auth-service).
 server:
-  port: 8082
+  port: ${SERVER_PORT:8082}
   shutdown: graceful
 
 spring:
@@ -11,8 +12,8 @@ spring:
 
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/user_db}
-    username: ${DB_USER:postgres}
-    password: ${DB_PASSWORD:postgres}
+    username: ${DB_USER:user_svc}
+    password: ${DB_PASSWORD:}
     hikari:
       maximum-pool-size: 10
       minimum-idle: 2
@@ -32,10 +33,7 @@ spring:
     baseline-on-migrate: false
 
   rabbitmq:
-    host: ${RABBITMQ_HOST:localhost}
-    port: ${RABBITMQ_PORT:5672}
-    username: ${RABBITMQ_USER:guest}
-    password: ${RABBITMQ_PASS:guest}
+    addresses: ${AMQP_URL:amqp://guest:guest@localhost:5672}
     publisher-confirm-type: correlated
     publisher-returns: true
     listener:
@@ -48,12 +46,9 @@ spring:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
-
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          jwk-set-uri: ${AUTH_JWKS_URL:http://localhost:8081/.well-known/jwks.json}
+      password: ${REDIS_PASSWORD:}
+      # db 0 = mapa (event), db 1 = rate limit de IA, db 2 = caché de perfiles (festa-infra/README).
+      database: ${REDIS_DATABASE:2}
 
   jackson:
     default-property-inclusion: non_null
@@ -63,6 +58,9 @@ spring:
 festa:
   user:
     pii-key: ${PII_ENCRYPTION_KEY:}
+    jwt:
+      issuer: ${JWT_ISSUER:festa-auth}
+      public-key-path: ${JWT_PUBLIC_KEY_PATH:../festa-infra/secrets/jwt_public.pem}
     auth-admin:
       base-url: ${AUTH_BASE_URL:http://localhost:8081}
       role-endpoint: /auth/admin/accounts/{id}/role
@@ -75,11 +73,15 @@ festa:
       retry-queue: user-service.inbox.retry
       dlq-queue: user-service.inbox.dlq
 
+# Prometheus (festa-infra/prometheus/prometheus.yml) raspa /metrics en todos los servicios.
 management:
   endpoints:
     web:
+      base-path: /
       exposure:
-        include: health,info,prometheus,metrics
+        include: health,info,prometheus
+      path-mapping:
+        prometheus: metrics
   endpoint:
     health:
       probes:
@@ -91,7 +93,7 @@ management:
 
 logging:
   level:
-    root: INFO
-    com.festa.user: INFO
+    root: ${LOG_LEVEL:INFO}
+    com.festa.user: ${LOG_LEVEL:INFO}
     org.springframework.amqp: WARN
     org.hibernate.SQL: WARN

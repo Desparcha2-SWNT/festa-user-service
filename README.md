@@ -5,16 +5,18 @@ consentimientos (Ley 1581) y verificación manual de comercios (RF3).
 
 - **Stack**: Java 21 · Spring Boot 3.5 · Postgres · RabbitMQ · Redis
 - **Puerto**: 8082 (el gateway expone `/api/users/...`)
-- **Auth**: JWT RS256 emitido por `festa-auth-service` (JWKS en `/.well-known/jwks.json`)
+- **Auth**: JWT RS256 emitido por `festa-auth-service`, validado con la llave pública de `JWT_PUBLIC_KEY_PATH`
 
 ## Qué hace
 
 - Guarda perfil extendido (bio, avatar, teléfono cifrado con AES-256-GCM).
-- Guarda intereses y preferencias de plan (RF2) y los publica para AI/Analytics.
+- Guarda intereses y preferencias de plan (RF2); los intereses salen en `profile.updated`.
 - Registra consentimientos granulares con versión y fecha (RNF5, RN6).
 - Recibe solicitudes de perfil de comercio y las somete a verificación manual (RF3).
-- Publica eventos de dominio por outbox (`festa.user`).
-- Consume eventos de auth y moderación (`user-service.inbox`).
+- Publica eventos de dominio por outbox (`festa.user`), según `festa-infra/contracts`.
+- Consume `account.registered` y `account.deleted` de auth (`user-service.inbox`).
+
+Detalle de eventos en [`docs/EVENTS.md`](docs/EVENTS.md).
 
 ## Qué NO hace
 
@@ -28,10 +30,13 @@ consentimientos (Ley 1581) y verificación manual de comercios (RF3).
 # Con Docker (desde festa-infra)
 docker compose --profile user up -d --build
 
-# Local (requiere infra arriba y .env cargado)
+# Local (requiere festa-infra arriba y .env cargado)
 cp .env.example .env
-source .env
-./mvnw spring-boot:run
+set -a; source .env; set +a
+mvn spring-boot:run
+
+# Pruebas (ContractTest usa ../festa-infra/contracts si existe)
+mvn test
 
 # Prueba de humo
 ./scripts/smoke.sh http://localhost:8082
@@ -52,7 +57,7 @@ source .env
 - `festa_outbox_published_total`
 - `festa_messages_consumed_total{type}`
 
-Prometheus: `GET /actuator/prometheus`.
+Prometheus: `GET /metrics` (lo raspa `festa-infra/prometheus`). Health: `GET /health`.
 
 
 
@@ -377,9 +382,9 @@ En las peticiones que requieran autenticación, agrega el header:
 Para estar 100% seguro de que el patrón *Outbox* y RabbitMQ funcionan:
 
 - **Método:** `GET`
-- **URL:** `{{user_base}}/actuator/prometheus`
+- **URL:** `{{user_base}}/metrics`
 
 Busca en el texto devuelto las siguientes métricas (los valores deben ir aumentando):
 - `festa_outbox_published_total`: Eventos que se enviaron a RabbitMQ.
 - `festa_outbox_pending`: Debería ser 0 si todo fluye rápido.
-- `festa_messages_consumed_total`: Número de eventos de Auth/Moderación procesados.
+- `festa_messages_consumed_total`: Número de eventos de auth procesados (por `type` y `outcome`).

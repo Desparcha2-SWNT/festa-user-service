@@ -62,9 +62,8 @@ public abstract class AbstractIntegrationTest {
         // PII key de test
         registry.add("festa.user.pii-key",
                 () -> "test-pii-key-please-change-in-prod-32bytes");
-        // JWKS: se reemplaza por TestSecurityConfig
-        registry.add("spring.security.oauth2.resourceserver.jwt.jwk-set-uri",
-                () -> "http://localhost:0/.well-known/jwks.json");
+        // SecurityConfig lee la llave al arrancar; TestSecurityConfig reemplaza el decoder igual.
+        registry.add("festa.user.jwt.public-key-path", TestKeys::publicKeyPem);
         // AuthAdminClient apunta a un puerto inalcanzable; se mockea por test
         registry.add("festa.user.auth-admin.base-url", () -> "http://localhost:1");
     }

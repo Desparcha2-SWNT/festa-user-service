@@ -11,9 +11,10 @@ COPY src/ src/
 RUN mvn -B -q -DskipTests package
 
 # ---------- Runtime ----------
-FROM eclipse-temurin:21-jre AS runtime
+# Alpine, igual que auth-service: trae el wget (busybox) que usa el HEALTHCHECK.
+FROM eclipse-temurin:21-jre-alpine AS runtime
 
-RUN groupadd --system festa && useradd --system --gid festa festa
+RUN addgroup -S festa && adduser -S festa -G festa
 WORKDIR /app
 
 COPY --from=build /workspace/target/festa-user-service-*.jar app.jar
@@ -25,6 +26,6 @@ EXPOSE 8082
 ENV JAVA_OPTS="-XX:MaxRAMPercentage=75 -XX:+UseContainerSupport"
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
-    CMD wget -qO- http://localhost:8082/actuator/health | grep -q '"status":"UP"' || exit 1
+    CMD wget -qO- http://localhost:8082/health | grep -q '"status":"UP"' || exit 1
 
 ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS -jar /app/app.jar"]
