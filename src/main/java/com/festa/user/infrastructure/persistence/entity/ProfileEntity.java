@@ -16,6 +16,9 @@ public class ProfileEntity {
     @Column(name = "account_id", nullable = false, updatable = false)
     private UUID accountId;
 
+    @Column(name = "display_name_enc")
+    private String displayNameEnc;
+
     @Column(name = "bio")
     private String bio;
 
@@ -33,6 +36,8 @@ public class ProfileEntity {
 
     public UUID getAccountId() { return accountId; }
     public void setAccountId(UUID accountId) { this.accountId = accountId; }
+    public String getDisplayNameEnc() { return displayNameEnc; }
+    public void setDisplayNameEnc(String displayNameEnc) { this.displayNameEnc = displayNameEnc; }
     public String getBio() { return bio; }
     public void setBio(String bio) { this.bio = bio; }
     public String getAvatarUrl() { return avatarUrl; }

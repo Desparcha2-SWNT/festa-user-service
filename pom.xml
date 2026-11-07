@@ -22,6 +22,9 @@
         <testcontainers.version>1.20.4</testcontainers.version>
         <jacoco.version>0.8.12</jacoco.version>
         <springdoc.version>2.8.5</springdoc.version>
+        <json-schema-validator.version>1.5.1</json-schema-validator.version>
+        <!-- Carpeta de festa-infra/contracts para ContractTest; vacía = el test se omite. -->
+        <festa.contracts.dir></festa.contracts.dir>
     </properties>
 
     <dependencies>
@@ -147,6 +150,12 @@
             <version>2.2.2</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.networknt</groupId>
+            <artifactId>json-schema-validator</artifactId>
+            <version>${json-schema-validator.version}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -170,6 +179,9 @@
                     <excludes>
                         <exclude>**/*IT.java</exclude>
                     </excludes>
+                    <systemPropertyVariables>
+                        <festa.contracts.dir>${festa.contracts.dir}</festa.contracts.dir>
+                    </systemPropertyVariables>
                 </configuration>
             </plugin>
             <plugin>
@@ -210,4 +222,16 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>local-contracts</id>
+            <activation>
+                <file><exists>${basedir}/../festa-infra/contracts/events</exists></file>
+            </activation>
+            <properties>
+                <festa.contracts.dir>${basedir}/../festa-infra/contracts</festa.contracts.dir>
+            </properties>
+        </profile>
+    </profiles>
 </project>

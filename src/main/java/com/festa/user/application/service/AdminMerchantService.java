@@ -4,6 +4,7 @@ import com.festa.user.application.cache.ProfileCacheService;
 import com.festa.user.application.command.ApproveMerchantCommand;
 import com.festa.user.application.command.RejectMerchantCommand;
 import com.festa.user.domain.event.outbound.MerchantRejectedEvent;
+import com.festa.user.domain.event.outbound.MerchantUpdatedEvent;
 import com.festa.user.domain.event.outbound.MerchantVerifiedEvent;
 import com.festa.user.domain.exception.NotFoundException;
 import com.festa.user.domain.model.MerchantProfile;
@@ -73,14 +74,7 @@ public class AdminMerchantService
         // Efecto remoto: cambio de rol en auth. Si falla, revierte toda la transacción.
         authAdmin.changeRole(saved.accountId(), "merchant", command.adminBearerToken());
 
-        outbox.append(MerchantVerifiedEvent.of(
-                saved.accountId().value(),
-                saved.businessName(),
-                saved.category(),
-                command.actorId().value(),
-                saved.updatedAt(),
-                clock.now()
-        ));
+        outbox.append(MerchantVerifiedEvent.of(saved, command.actorId().value(), clock.now()));
         cache.evictAllForAccount(saved.accountId());
 
         return saved;
@@ -104,16 +98,11 @@ public class AdminMerchantService
         // Si el merchant estaba VERIFIED (regresión), degradamos el rol en auth.
         if (previous == MerchantStatus.VERIFIED) {
             authAdmin.changeRole(saved.accountId(), "user", command.adminBearerToken());
+            // event y payment no consumen merchant.rejected: así dejan de tratarlo como verificado.
+            outbox.append(MerchantUpdatedEvent.of(saved, clock.now()));
         }
 
-        outbox.append(MerchantRejectedEvent.of(
-                saved.accountId().value(),
-                saved.businessName(),
-                command.reason(),
-                command.actorId().value(),
-                saved.updatedAt(),
-                clock.now()
-        ));
+        outbox.append(MerchantRejectedEvent.of(saved, command.reason(), command.actorId().value(), clock.now()));
         cache.evictAllForAccount(saved.accountId());
 
         return saved;

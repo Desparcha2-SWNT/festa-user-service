@@ -8,12 +8,14 @@ import java.time.Instant;
  * Perfil extendido del usuario (RF2, parte no cubierta por auth).
  *
  * Notas:
- *  - email y displayName NO viven aquí: auth es la fuente de verdad.
- *  - phone está en plaintext en el dominio; se cifra AES-256-GCM en persistencia.
+ *  - email NO vive aquí: auth es la fuente de verdad.
+ *  - displayName se copia de account.registered porque lo exige el contrato profile.updated.
+ *  - displayName y phone están en plaintext en el dominio; se cifran AES-256-GCM en persistencia.
  *  - bio, avatarUrl y phone son opcionales.
  */
 public record Profile(
         AccountId accountId,
+        String displayName,
         String bio,
         String avatarUrl,
         String phone,
@@ -30,8 +32,8 @@ public record Profile(
         }
     }
 
-    public static Profile emptyFor(AccountId accountId, Instant now) {
-        return new Profile(accountId, null, null, null, now, now);
+    public static Profile emptyFor(AccountId accountId, String displayName, Instant now) {
+        return new Profile(accountId, displayName, null, null, null, now, now);
     }
 
     public Profile applyUpdate(
@@ -40,6 +42,6 @@ public record Profile(
             String newPhone,
             Instant now
     ) {
-        return new Profile(accountId, newBio, newAvatarUrl, newPhone, createdAt, now);
+        return new Profile(accountId, displayName, newBio, newAvatarUrl, newPhone, createdAt, now);
     }
 }

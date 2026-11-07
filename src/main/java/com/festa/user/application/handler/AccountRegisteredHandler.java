@@ -53,10 +53,10 @@ public class AccountRegisteredHandler {
                 return;
             }
             Instant now = clock.now();
-            profiles.save(Profile.emptyFor(accountId, now));
+            profiles.save(Profile.emptyFor(accountId, event.displayName(), now));
             interests.save(UserInterests.empty(accountId, now));
             preferences.save(UserPreferences.defaults(accountId, now));
-            log.info("Perfil creado para {} (accountType={})", accountId, event.accountType());
+            log.info("Perfil creado para {} (role={})", accountId, event.role());
         });
     }
 }

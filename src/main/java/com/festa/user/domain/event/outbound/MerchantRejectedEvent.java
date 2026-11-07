@@ -1,20 +1,19 @@
 package com.festa.user.domain.event.outbound;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.festa.user.domain.event.DomainEvent;
+import com.festa.user.domain.model.MerchantProfile;
 
 import java.time.Instant;
 import java.util.UUID;
 
-/**
- * Se publica al rechazar un comercio (RF3). Motivo en español, mostrable
- * al usuario. Analytics lo usa para trazabilidad del proceso manual.
- */
+/** Contrato merchant.rejected: el motivo va en español, mostrable al comercio. */
 public record MerchantRejectedEvent(
-        UUID eventId,
-        Instant occurredAt,
-        String eventType,
-        UUID accountId,
-        String businessName,
+        @JsonIgnore UUID eventId,
+        @JsonIgnore Instant occurredAt,
+        @JsonIgnore String eventType,
+        UUID merchantId,
+        UUID userId,
         String reason,
         UUID rejectedBy,
         Instant rejectedAt
@@ -22,16 +21,8 @@ public record MerchantRejectedEvent(
 
     public static final String TYPE = "merchant.rejected";
 
-    public static MerchantRejectedEvent of(
-            UUID accountId,
-            String businessName,
-            String reason,
-            UUID rejectedBy,
-            Instant rejectedAt,
-            Instant now
-    ) {
-        return new MerchantRejectedEvent(
-                UUID.randomUUID(), now, TYPE, accountId, businessName, reason, rejectedBy, rejectedAt
-        );
+    public static MerchantRejectedEvent of(MerchantProfile m, String reason, UUID rejectedBy, Instant now) {
+        UUID id = m.accountId().value();
+        return new MerchantRejectedEvent(UUID.randomUUID(), now, TYPE, id, id, reason, rejectedBy, m.updatedAt());
     }
 }

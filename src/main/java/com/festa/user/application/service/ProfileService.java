@@ -3,7 +3,6 @@ package com.festa.user.application.service;
 import com.festa.user.application.cache.ProfileCacheService;
 import com.festa.user.application.command.UpdateProfileCommand;
 import com.festa.user.application.query.MyProfileView;
-import com.festa.user.domain.event.outbound.UserProfileUpdatedEvent;
 import com.festa.user.domain.exception.NotFoundException;
 import com.festa.user.domain.model.Consent;
 import com.festa.user.domain.model.Profile;
@@ -116,7 +115,7 @@ public class ProfileService implements GetMyProfileUseCase, UpdateMyProfileUseCa
         Profile updated = current.applyUpdate(newBio, newAvatar, newPhone, clock.now());
         Profile saved = profiles.save(updated);
 
-        outbox.append(UserProfileUpdatedEvent.of(command.accountId().value(), changed, clock.now()));
+        // bio, avatar y teléfono no son parte de profile.updated (solo nombre, intereses y zona).
         cache.evictAllForAccount(command.accountId());
 
         return saved;

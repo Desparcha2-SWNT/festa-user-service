@@ -6,19 +6,16 @@ import java.time.Instant;
 import java.util.UUID;
 
 /**
- * Publicado por auth al registrarse una cuenta.
- * Payload mínimo para que user-service cree un Profile vacío.
- *
- * accountType: "user" | "merchant" (lo que eligió el usuario al registrarse).
- * role: siempre "user" al registrarse; los merchants se promueven al aprobarse (RF3).
+ * Contrato account.registered (lo publica auth). user-service crea el perfil vacío
+ * y guarda el displayName, que necesita para publicar profile.updated.
  */
 public record AccountRegisteredEvent(
         UUID eventId,
         Instant occurredAt,
         String eventType,
         UUID accountId,
+        String displayName,
         String role,
-        String accountType,
         Instant registeredAt
 ) implements DomainEvent {
 }

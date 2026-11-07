@@ -12,7 +12,7 @@ import java.util.Optional;
 /**
  * Vista compuesta para GET /users/me.
  * merchantStatus es opcional: solo existe si la cuenta tiene perfil de comercio.
- * No incluye email ni displayName: esos los aporta auth desde su propio endpoint.
+ * No incluye email: lo aporta auth desde su propio endpoint.
  */
 public record MyProfileView(
         Profile profile,

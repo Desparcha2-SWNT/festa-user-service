@@ -2,7 +2,8 @@ package com.festa.user.application.service;
 
 import com.festa.user.application.cache.ProfileCacheService;
 import com.festa.user.application.command.RecordConsentCommand;
-import com.festa.user.domain.event.outbound.UserConsentUpdatedEvent;
+import com.festa.user.domain.event.outbound.LocationConsentGrantedEvent;
+import com.festa.user.domain.event.outbound.LocationConsentRevokedEvent;
 import com.festa.user.domain.exception.NotFoundException;
 import com.festa.user.domain.model.Consent;
 import com.festa.user.domain.port.in.ListConsentsUseCase;
@@ -12,6 +13,7 @@ import com.festa.user.domain.port.out.ConsentRepositoryPort;
 import com.festa.user.domain.port.out.OutboxRepositoryPort;
 import com.festa.user.domain.port.out.ProfileRepositoryPort;
 import com.festa.user.domain.vo.AccountId;
+import com.festa.user.domain.vo.ConsentType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -64,13 +66,12 @@ public class ConsentsService implements ListConsentsUseCase, RecordConsentUseCas
         );
         Consent saved = consents.save(consent);
 
-        outbox.append(UserConsentUpdatedEvent.of(
-                command.accountId().value(),
-                saved.type(),
-                saved.granted(),
-                saved.version(),
-                clock.now()
-        ));
+        // Solo el de ubicación tiene contrato (RNF5); los demás consentimientos se quedan aquí.
+        if (saved.type() == ConsentType.LOCATION) {
+            outbox.append(saved.granted()
+                    ? LocationConsentGrantedEvent.of(command.accountId().value(), saved.version(), saved.grantedAt(), clock.now())
+                    : LocationConsentRevokedEvent.of(command.accountId().value(), saved.grantedAt(), clock.now()));
+        }
         cache.evictAllForAccount(command.accountId());
 
         return saved;

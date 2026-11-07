@@ -3,7 +3,8 @@ package com.festa.user.application.service;
 import com.festa.user.application.cache.ProfileCacheService;
 import com.festa.user.application.command.SubmitMerchantCommand;
 import com.festa.user.application.command.UpdateMerchantCommand;
-import com.festa.user.domain.event.outbound.MerchantVerificationRequestedEvent;
+import com.festa.user.domain.event.outbound.MerchantSubmittedEvent;
+import com.festa.user.domain.event.outbound.MerchantUpdatedEvent;
 import com.festa.user.domain.exception.ConflictException;
 import com.festa.user.domain.exception.NotFoundException;
 import com.festa.user.domain.model.MerchantProfile;
@@ -73,13 +74,7 @@ public class MerchantService implements SubmitMerchantUseCase, GetMyMerchantUseC
                 saved.accountId(), null, MerchantStatus.PENDING, saved.accountId(), null, clock.now()
         ));
 
-        outbox.append(MerchantVerificationRequestedEvent.of(
-                saved.accountId().value(),
-                saved.businessName(),
-                saved.category(),
-                saved.updatedAt(),
-                clock.now()
-        ));
+        outbox.append(MerchantSubmittedEvent.of(saved, clock.now()));
         cache.evictAllForAccount(command.accountId());
 
         return saved;
@@ -116,14 +111,12 @@ public class MerchantService implements SubmitMerchantUseCase, GetMyMerchantUseC
                     saved.accountId(), previous, saved.verificationStatus(),
                     saved.accountId(), null, clock.now()
             ));
+            if (previous == MerchantStatus.VERIFIED) {
+                // Perdió la verificación por un cambio crítico: event y payment deben enterarse.
+                outbox.append(MerchantUpdatedEvent.of(saved, clock.now()));
+            }
             if (saved.verificationStatus() == MerchantStatus.PENDING) {
-                outbox.append(MerchantVerificationRequestedEvent.of(
-                        saved.accountId().value(),
-                        saved.businessName(),
-                        saved.category(),
-                        saved.updatedAt(),
-                        clock.now()
-                ));
+                outbox.append(MerchantSubmittedEvent.of(saved, clock.now()));
             }
         }
 

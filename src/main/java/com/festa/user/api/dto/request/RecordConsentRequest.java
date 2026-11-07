@@ -8,6 +8,7 @@ import jakarta.validation.constraints.Size;
 public record RecordConsentRequest(
         @NotNull ConsentType type,
         boolean granted,
-        @NotBlank @Size(max = 32) String version
+        // El contrato location_consent.granted limita policyVersion a 20 caracteres.
+        @NotBlank @Size(max = 20) String version
 ) {
 }

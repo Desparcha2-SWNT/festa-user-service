@@ -18,6 +18,7 @@ public class ProfileMapper {
     public ProfileEntity toEntity(Profile profile) {
         ProfileEntity e = new ProfileEntity();
         e.setAccountId(profile.accountId().value());
+        e.setDisplayNameEnc(profile.displayName() == null ? null : piiEncryptor.encrypt(profile.displayName()));
         e.setBio(profile.bio());
         e.setAvatarUrl(profile.avatarUrl());
         e.setPhoneEnc(profile.phone() == null ? null : piiEncryptor.encrypt(profile.phone()));
@@ -29,6 +30,7 @@ public class ProfileMapper {
     public Profile toDomain(ProfileEntity e) {
         return new Profile(
                 AccountId.of(e.getAccountId()),
+                e.getDisplayNameEnc() == null ? null : piiEncryptor.decrypt(e.getDisplayNameEnc()),
                 e.getBio(),
                 e.getAvatarUrl(),
                 e.getPhoneEnc() == null ? null : piiEncryptor.decrypt(e.getPhoneEnc()),

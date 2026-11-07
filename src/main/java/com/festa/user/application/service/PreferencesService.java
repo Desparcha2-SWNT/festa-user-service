@@ -2,7 +2,6 @@ package com.festa.user.application.service;
 
 import com.festa.user.application.cache.ProfileCacheService;
 import com.festa.user.application.command.UpdatePreferencesCommand;
-import com.festa.user.domain.event.outbound.UserPreferencesUpdatedEvent;
 import com.festa.user.domain.exception.NotFoundException;
 import com.festa.user.domain.model.UserPreferences;
 import com.festa.user.domain.port.in.GetPreferencesUseCase;
@@ -65,14 +64,7 @@ public class PreferencesService implements GetPreferencesUseCase, UpdatePreferen
         );
         UserPreferences saved = preferences.save(updated);
 
-        outbox.append(UserPreferencesUpdatedEvent.of(
-                command.accountId().value(),
-                saved.budgetRange(),
-                saved.preferredZones(),
-                saved.preferredDays(),
-                saved.maxDistanceKm(),
-                clock.now()
-        ));
+        // No hay contrato para preferencias: si ai-service las necesita, primero se agrega en festa-infra.
         cache.evictAllForAccount(command.accountId());
 
         return saved;

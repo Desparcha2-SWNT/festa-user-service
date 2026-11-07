@@ -2,8 +2,9 @@ package com.festa.user.application.service;
 
 import com.festa.user.application.cache.ProfileCacheService;
 import com.festa.user.application.command.ReplaceInterestsCommand;
-import com.festa.user.domain.event.outbound.UserInterestsUpdatedEvent;
+import com.festa.user.domain.event.outbound.ProfileUpdatedEvent;
 import com.festa.user.domain.exception.NotFoundException;
+import com.festa.user.domain.model.Profile;
 import com.festa.user.domain.model.UserInterests;
 import com.festa.user.domain.port.in.ReplaceInterestsUseCase;
 import com.festa.user.domain.port.out.ClockPort;
@@ -39,7 +40,7 @@ public class InterestsService implements ReplaceInterestsUseCase {
     @Override
     @Transactional
     public UserInterests handle(ReplaceInterestsCommand command) {
-        profiles.findByAccountId(command.accountId())
+        Profile profile = profiles.findByAccountId(command.accountId())
                 .orElseThrow(() -> NotFoundException.of("Perfil", command.accountId()));
 
         UserInterests current = interests.findByAccountId(command.accountId())
@@ -48,8 +49,8 @@ public class InterestsService implements ReplaceInterestsUseCase {
         UserInterests replaced = current.replace(command.interests(), clock.now());
         UserInterests saved = interests.save(replaced);
 
-        outbox.append(UserInterestsUpdatedEvent.of(
-                command.accountId().value(), saved.interests(), clock.now()
+        outbox.append(ProfileUpdatedEvent.of(
+                command.accountId().value(), profile.displayName(), saved.interests(), clock.now()
         ));
         cache.evictAllForAccount(command.accountId());
 
