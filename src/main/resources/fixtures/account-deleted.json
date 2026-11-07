@@ -1,0 +1,13 @@
+{
+  "eventId": "33333333-3333-4333-8333-333333333333",
+  "eventType": "account.deleted",
+  "version": 1,
+  "occurredAt": "2026-01-17T10:00:00Z",
+  "producer": "auth-service",
+  "correlationId": null,
+  "causationId": null,
+  "data": {
+    "userId": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+    "deletedAt": "2026-01-17T10:00:00Z"
+  }
+}
