@@ -24,8 +24,9 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        // CSRF queda activo: oauth2ResourceServer ya lo ignora en peticiones con token Bearer
+        // (todas las que modifican datos lo exigen), así que no hace falta desactivarlo.
         http
-                .csrf(csrf -> csrf.disable())
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
