@@ -1,0 +1,99 @@
+# Variables con los mismos nombres que festa-infra/docker-compose.yml (patrón de auth-service).
+server:
+  port: ${SERVER_PORT:8082}
+  shutdown: graceful
+
+spring:
+  application:
+    name: festa-user-service
+
+  lifecycle:
+    timeout-per-shutdown-phase: 20s
+
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/user_db}
+    username: ${DB_USER:user_svc}
+    password: ${DB_PASSWORD:}
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc.time_zone: UTC
+        format_sql: false
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: false
+
+  rabbitmq:
+    addresses: ${AMQP_URL:amqp://guest:guest@localhost:5672}
+    publisher-confirm-type: correlated
+    publisher-returns: true
+    listener:
+      simple:
+        acknowledge-mode: manual
+        prefetch: 10
+        default-requeue-rejected: false
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      # db 0 = mapa (event), db 1 = rate limit de IA, db 2 = caché de perfiles (festa-infra/README).
+      database: ${REDIS_DATABASE:2}
+
+  jackson:
+    default-property-inclusion: non_null
+    deserialization:
+      fail-on-unknown-properties: false
+
+festa:
+  user:
+    pii-key: ${PII_ENCRYPTION_KEY:}
+    jwt:
+      issuer: ${JWT_ISSUER:festa-auth}
+      public-key-path: ${JWT_PUBLIC_KEY_PATH:../festa-infra/secrets/jwt_public.pem}
+    auth-admin:
+      base-url: ${AUTH_BASE_URL:http://localhost:8081}
+      role-endpoint: /auth/admin/accounts/{id}/role
+    outbox:
+      poll-interval: 2s
+      batch-size: 50
+    rabbit:
+      exchange: festa.user
+      inbox-queue: user-service.inbox
+      retry-queue: user-service.inbox.retry
+      dlq-queue: user-service.inbox.dlq
+
+# Prometheus (festa-infra/prometheus/prometheus.yml) raspa /metrics en todos los servicios.
+management:
+  endpoints:
+    web:
+      base-path: /
+      exposure:
+        include: health,info,prometheus
+      path-mapping:
+        prometheus: metrics
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: when_authorized
+  metrics:
+    tags:
+      application: festa-user-service
+
+logging:
+  level:
+    root: ${LOG_LEVEL:INFO}
+    com.festa.user: ${LOG_LEVEL:INFO}
+    org.springframework.amqp: WARN
+    org.hibernate.SQL: WARN
