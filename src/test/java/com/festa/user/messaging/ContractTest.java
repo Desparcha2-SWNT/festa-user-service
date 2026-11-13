@@ -21,6 +21,12 @@ import com.festa.user.domain.event.outbound.MerchantSubmittedEvent;
 import com.festa.user.domain.event.outbound.MerchantUpdatedEvent;
 import com.festa.user.domain.event.outbound.MerchantVerifiedEvent;
 import com.festa.user.domain.event.outbound.ProfileUpdatedEvent;
+import com.festa.user.domain.event.outbound.EventHiddenEvent;
+import com.festa.user.domain.event.outbound.EventRestoredEvent;
+import com.festa.user.domain.event.outbound.ReportCreatedEvent;
+import com.festa.user.domain.event.outbound.ReportResolvedEvent;
+import com.festa.user.domain.event.outbound.UserReinstatedEvent;
+import com.festa.user.domain.event.outbound.UserSuspendedEvent;
 import com.festa.user.domain.model.MerchantProfile;
 import com.festa.user.domain.vo.AccountId;
 import com.festa.user.domain.vo.BusinessCategory;
@@ -87,7 +93,16 @@ class ContractTest {
                 Arguments.of(MerchantVerifiedEvent.of(verified, admin, NOW)),
                 Arguments.of(MerchantRejectedEvent.of(otro.reject("No se pudo validar la dirección", NOW), "No se pudo validar la dirección", admin, NOW)),
                 Arguments.of(MerchantUpdatedEvent.of(verified, NOW)),
-                Arguments.of(MerchantUpdatedEvent.of(otro, NOW)));
+                Arguments.of(MerchantUpdatedEvent.of(otro, NOW)),
+                Arguments.of(ReportCreatedEvent.of(UUID.randomUUID(), userId, "event", UUID.randomUUID(), "spam", "Publica lo mismo cada hora", NOW)),
+                Arguments.of(ReportCreatedEvent.of(UUID.randomUUID(), userId, "user", UUID.randomUUID(), "acoso", null, NOW)),
+                Arguments.of(ReportResolvedEvent.of(UUID.randomUUID(), userId, "event", UUID.randomUUID(), "action_taken", admin, NOW)),
+                Arguments.of(UserSuspendedEvent.of(userId, UUID.randomUUID(), "Fraude en la venta de boletas", NOW.plus(Duration.ofDays(7)), admin, NOW)),
+                Arguments.of(UserSuspendedEvent.of(userId, null, "Fraude", null, admin, NOW)),
+                Arguments.of(UserReinstatedEvent.of(userId, admin, NOW)),
+                Arguments.of(EventHiddenEvent.of(UUID.randomUUID(), UUID.randomUUID(), "Información falsa", admin, NOW)),
+                Arguments.of(EventHiddenEvent.of(UUID.randomUUID(), null, "Spam", admin, NOW)),
+                Arguments.of(EventRestoredEvent.of(UUID.randomUUID(), admin, NOW)));
     }
 
     @ParameterizedTest(name = "data de {0}")
