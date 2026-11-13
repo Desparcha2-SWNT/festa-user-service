@@ -388,3 +388,21 @@ Busca en el texto devuelto las siguientes métricas (los valores deben ir aument
 - `festa_outbox_published_total`: Eventos que se enviaron a RabbitMQ.
 - `festa_outbox_pending`: Debería ser 0 si todo fluye rápido.
 - `festa_messages_consumed_total`: Número de eventos de auth procesados (por `type` y `outcome`).
+
+## Reportes y moderación (RF14)
+
+En el piloto la moderación es manual: cualquier usuario reporta y un admin decide. Cada decisión se publica en
+`festa.user` y la aplican los demás servicios (auth bloquea el login y revoca refresh tokens, event oculta los
+eventos, notification avisa).
+
+| Método y ruta | Quién | Qué hace / publica |
+|---|---|---|
+| `POST /reports` `{targetType: event\|user, targetId, reason, comment?}` | Usuario | Crea el reporte (`report.created`). 409 si ya tiene uno abierto sobre lo mismo |
+| `GET /reports/mine` | Usuario | Sus reportes y su estado |
+| `GET /users/admin/reports` | Admin | Reportes abiertos |
+| `POST /users/admin/reports/{id}/resolve` `{outcome: dismissed\|action_taken, action?: hide_event\|suspend_user, reason?, suspendedUntil?}` | Admin | `report.resolved` y, si hay acción, `moderation.event_hidden` o `moderation.user_suspended` |
+| `POST /users/admin/moderation/events/{eventId}/hide` `{reason}` / `.../restore` | Admin | `moderation.event_hidden` / `moderation.event_restored` |
+| `POST /users/admin/moderation/users/{userId}/suspend` `{reason, until?}` / `.../reinstate` | Admin | `moderation.user_suspended` / `moderation.user_reinstated` |
+
+Motivos válidos: `spam`, `fraude`, `contenido_inapropiado`, `informacion_falsa`, `acoso`, `otro`. Con
+`account.deleted` se borran los reportes que hizo el usuario (Ley 1581).
