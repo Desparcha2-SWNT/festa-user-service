@@ -7,6 +7,7 @@ import com.festa.user.domain.port.out.MerchantRepositoryPort;
 import com.festa.user.domain.port.out.MerchantVerificationEventRepositoryPort;
 import com.festa.user.domain.port.out.PreferencesRepositoryPort;
 import com.festa.user.domain.port.out.ProfileRepositoryPort;
+import com.festa.user.domain.port.out.ReportRepositoryPort;
 import com.festa.user.domain.vo.AccountId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +32,7 @@ public class AccountDeletedHandler {
     private final ConsentRepositoryPort consents;
     private final MerchantRepositoryPort merchants;
     private final MerchantVerificationEventRepositoryPort auditEvents;
+    private final ReportRepositoryPort reports;
 
     public AccountDeletedHandler(
             InboxSupport inbox,
@@ -39,7 +41,8 @@ public class AccountDeletedHandler {
             PreferencesRepositoryPort preferences,
             ConsentRepositoryPort consents,
             MerchantRepositoryPort merchants,
-            MerchantVerificationEventRepositoryPort auditEvents
+            MerchantVerificationEventRepositoryPort auditEvents,
+            ReportRepositoryPort reports
     ) {
         this.inbox = inbox;
         this.profiles = profiles;
@@ -48,11 +51,14 @@ public class AccountDeletedHandler {
         this.consents = consents;
         this.merchants = merchants;
         this.auditEvents = auditEvents;
+        this.reports = reports;
     }
 
     public void handle(AccountDeletedEvent event) {
         AccountId accountId = AccountId.of(event.accountId());
         inbox.runOnce(event.eventId(), CONSUMER, () -> {
+            // RF14: los reportes que hizo (contrato account.deleted: "borra perfil, intereses y reportes hechos").
+            reports.deleteByReporter(accountId.value());
             auditEvents.deleteByAccountId(accountId);
             merchants.deleteByAccountId(accountId);
             consents.deleteByAccountId(accountId);
