@@ -9,8 +9,9 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import java.time.Instant;
 
 /**
- * Reemplaza el decoder JWKS en pruebas: el token es "accountId:rol"
- * (p. ej. "3f2c...:merchant") y se acepta sin firma.
+ * Reemplaza el decoder JWKS en pruebas: el token es "accountId.rol" (p. ej. "3f2c....merchant")
+ * y se acepta sin firma. También acepta "accountId:rol", pero Spring rechaza los dos puntos en un
+ * Bearer real (solo letras, dígitos y -._~+/), así que las pruebas por HTTP usan el punto.
  */
 @TestConfiguration
 public class TestSecurityConfig {
@@ -19,7 +20,8 @@ public class TestSecurityConfig {
     @Primary
     public JwtDecoder testJwtDecoder() {
         return token -> {
-            String[] parts = token.split(":", 2);
+            int sep = token.contains(":") ? token.indexOf(':') : token.lastIndexOf('.');
+            String[] parts = sep < 0 ? new String[] {token} : new String[] {token.substring(0, sep), token.substring(sep + 1)};
             Instant now = Instant.now();
             return Jwt.withTokenValue(token)
                     .header("alg", "none")

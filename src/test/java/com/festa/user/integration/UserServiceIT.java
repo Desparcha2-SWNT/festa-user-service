@@ -29,7 +29,7 @@ import org.springframework.test.web.servlet.MockMvc;
 /**
  * Integración con PostgreSQL, RabbitMQ y Redis reales (Testcontainers): perfil creado por account.registered,
  * edición del perfil e intereses, y el ciclo de verificación manual de comercios con su outbox.
- * El token de prueba es "cuenta:rol" (TestSecurityConfig); el cambio de rol en auth-service se simula.
+ * El token de prueba es "cuenta.rol" (TestSecurityConfig); el cambio de rol en auth-service se simula.
  */
 class UserServiceIT extends AbstractIntegrationTest {
 
@@ -52,8 +52,9 @@ class UserServiceIT extends AbstractIntegrationTest {
         return account;
     }
 
+    // Token de prueba "cuenta.rol" (TestSecurityConfig): el punto sí es válido en un Bearer, los dos puntos no.
     private static String bearer(UUID account, String role) {
-        return "Bearer " + account + ":" + role;
+        return "Bearer " + account + "." + role;
     }
 
     private int outboxCount(String eventType) {
