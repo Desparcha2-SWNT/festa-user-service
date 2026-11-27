@@ -12,6 +12,7 @@ import com.festa.user.domain.model.MerchantVerificationEvent;
 import com.festa.user.domain.port.in.ApproveMerchantUseCase;
 import com.festa.user.domain.port.in.ListPendingMerchantsUseCase;
 import com.festa.user.domain.port.in.RejectMerchantUseCase;
+import com.festa.user.domain.port.in.RepublishVerifiedMerchantsUseCase;
 import com.festa.user.domain.port.out.AuthAdminClientPort;
 import com.festa.user.domain.port.out.ClockPort;
 import com.festa.user.domain.port.out.MerchantRepositoryPort;
@@ -25,7 +26,8 @@ import java.util.List;
 
 @Service
 public class AdminMerchantService
-        implements ListPendingMerchantsUseCase, ApproveMerchantUseCase, RejectMerchantUseCase {
+        implements ListPendingMerchantsUseCase, ApproveMerchantUseCase, RejectMerchantUseCase,
+        RepublishVerifiedMerchantsUseCase {
 
     private final MerchantRepositoryPort merchants;
     private final MerchantVerificationEventRepositoryPort auditEvents;
@@ -106,5 +108,17 @@ public class AdminMerchantService
         cache.evictAllForAccount(saved.accountId());
 
         return saved;
+    }
+
+    /**
+     * Un merchant.updated por cada comercio verificado, con sus datos y su updatedAt actuales: los
+     * consumidores lo aplican de forma idempotente (ai solo escribe si es más reciente que lo que tiene).
+     */
+    @Override
+    @Transactional
+    public int republish() {
+        List<MerchantProfile> verified = merchants.findByStatus(MerchantStatus.VERIFIED.name());
+        verified.forEach(m -> outbox.append(MerchantUpdatedEvent.of(m, clock.now())));
+        return verified.size();
     }
 }
