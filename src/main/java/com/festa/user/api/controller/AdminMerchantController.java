@@ -10,6 +10,7 @@ import com.festa.user.domain.model.MerchantProfile;
 import com.festa.user.domain.port.in.ApproveMerchantUseCase;
 import com.festa.user.domain.port.in.ListPendingMerchantsUseCase;
 import com.festa.user.domain.port.in.RejectMerchantUseCase;
+import com.festa.user.domain.port.in.RepublishVerifiedMerchantsUseCase;
 import com.festa.user.domain.vo.AccountId;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpHeaders;
@@ -30,17 +31,20 @@ import java.util.UUID;
 public class AdminMerchantController {
 
     private final ListPendingMerchantsUseCase listPending;
+    private final RepublishVerifiedMerchantsUseCase republishVerified;
     private final ApproveMerchantUseCase approveMerchant;
     private final RejectMerchantUseCase rejectMerchant;
     private final DtoMapper mapper;
 
     public AdminMerchantController(
             ListPendingMerchantsUseCase listPending,
+            RepublishVerifiedMerchantsUseCase republishVerified,
             ApproveMerchantUseCase approveMerchant,
             RejectMerchantUseCase rejectMerchant,
             DtoMapper mapper
     ) {
         this.listPending = listPending;
+        this.republishVerified = republishVerified;
         this.approveMerchant = approveMerchant;
         this.rejectMerchant = rejectMerchant;
         this.mapper = mapper;
@@ -49,6 +53,15 @@ public class AdminMerchantController {
     @GetMapping
     public List<MerchantResponse> pending() {
         return listPending.handle().stream().map(mapper::toMerchantResponse).toList();
+    }
+
+    /**
+     * Pone al día a los consumidores con los comercios ya verificados (por ejemplo, tras desplegar uno
+     * que antes no escuchaba la aprobación). Idempotente: se puede llamar más de una vez.
+     */
+    @PostMapping("/republish-verified")
+    public java.util.Map<String, Integer> republishVerified() {
+        return java.util.Map.of("republished", republishVerified.republish());
     }
 
     @PostMapping("/{id}/approve")
